@@ -1,0 +1,991 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Initialize Swift Package Structure",
+        "description": "Create the Swift package with all required targets and configure dependencies including swift-subprocess",
+        "details": "1. Create Package.swift with Swift 6.0 tools version\n2. Define targets: HarvestBinCommandsCore, HarvestBinCommandsDefaults, HarvestBinCommands, HarvestBinCommandsDemo\n3. Add swift-subprocess dependency from GitHub\n4. Configure platform requirements (macOS 12.0+)\n5. Set up test targets for each module\n6. Create directory structure for all targets\n\nPackage.swift structure:\n```swift\n// swift-tools-version: 6.0\nimport PackageDescription\n\nlet package = Package(\n    name: \"HarvestBinCommands\",\n    platforms: [.macOS(.v12)],\n    products: [\n        .library(name: \"HarvestBinCommandsCore\", targets: [\"HarvestBinCommandsCore\"]),\n        .library(name: \"HarvestBinCommandsDefaults\", targets: [\"HarvestBinCommandsDefaults\"]),\n        .library(name: \"HarvestBinCommands\", targets: [\"HarvestBinCommands\"]),\n        .executable(name: \"HarvestBinCommandsDemo\", targets: [\"HarvestBinCommandsDemo\"])\n    ],\n    dependencies: [\n        .package(url: \"https://github.com/apple/swift-subprocess.git\", from: \"1.0.0\")\n    ],\n    targets: [\n        .target(name: \"HarvestBinCommandsCore\", dependencies: [.product(name: \"Subprocess\", package: \"swift-subprocess\")]),\n        .target(name: \"HarvestBinCommandsDefaults\", dependencies: [\"HarvestBinCommandsCore\"]),\n        .target(name: \"HarvestBinCommands\", dependencies: [\"HarvestBinCommandsDefaults\"]),\n        .executableTarget(name: \"HarvestBinCommandsDemo\", dependencies: [\"HarvestBinCommands\"]),\n        .testTarget(name: \"HarvestBinCommandsCoreTests\", dependencies: [\"HarvestBinCommandsCore\"]),\n        .testTarget(name: \"HarvestBinCommandsDefaultsTests\", dependencies: [\"HarvestBinCommandsDefaults\"]),\n        .testTarget(name: \"HarvestBinCommandsTests\", dependencies: [\"HarvestBinCommands\"])\n    ]\n)\n```",
+        "testStrategy": "1. Verify package builds successfully with swift build\n2. Ensure all targets are created in correct directories\n3. Test import statements work between targets\n4. Verify swift-subprocess dependency resolves correctly\n5. Run swift test to ensure test targets are configured properly",
+        "priority": "high",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Package.swift with target definitions",
+            "description": "Create the main Package.swift file with Swift 6.0 tools version, defining all targets and the swift-subprocess dependency",
+            "dependencies": [],
+            "details": "Create Package.swift at the root level with:\n- Swift tools version 6.0\n- Package name: HarvestBinCommands\n- Platform: macOS 12.0+\n- Targets: HarvestBinCommandsCore (library), HarvestBinCommandsDefaults (library), HarvestBinCommands (library), HarvestBinCommandsDemo (executable)\n- Test targets: HarvestBinCommandsCoreTests, HarvestBinCommandsDefaultsTests, HarvestBinCommandsTests\n- Dependencies: swift-subprocess from https://github.com/apple/swift-subprocess.git\n- Target dependencies: Core has swift-subprocess, Defaults depends on Core, Commands depends on Core and Defaults, Demo depends on Commands",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Set up swift-subprocess dependency",
+            "description": "Configure the swift-subprocess package dependency with correct version and integration",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "In Package.swift:\n- Add package dependency: .package(url: \"https://github.com/apple/swift-subprocess.git\", from: \"1.0.0\")\n- Add to HarvestBinCommandsCore target dependencies: .product(name: \"Subprocess\", package: \"swift-subprocess\")\n- Verify the dependency resolves correctly with swift package resolve\n- Document the minimum required version of swift-subprocess",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create directory structure for all targets",
+            "description": "Set up the complete directory structure following Swift Package Manager conventions",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Create directories:\n- Sources/HarvestBinCommandsCore/\n- Sources/HarvestBinCommandsDefaults/\n- Sources/HarvestBinCommands/\n- Sources/HarvestBinCommandsDemo/\n- Tests/HarvestBinCommandsCoreTests/\n- Tests/HarvestBinCommandsDefaultsTests/\n- Tests/HarvestBinCommandsTests/\nAdd placeholder Swift files in each directory to ensure git tracks them",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Configure target relationships and exports",
+            "description": "Set up proper module imports and public API exports between targets",
+            "dependencies": [
+              "1.2",
+              "1.3"
+            ],
+            "details": "Create export files:\n- In HarvestBinCommandsCore: Create Core.swift with @_exported import Subprocess\n- In HarvestBinCommandsDefaults: Create Defaults.swift with import HarvestBinCommandsCore\n- In HarvestBinCommands: Create Commands.swift with imports for Core and Defaults\n- In HarvestBinCommandsDemo: Create main.swift with import HarvestBinCommands\nEnsure public access modifiers are properly set for cross-module visibility",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Verify build configuration and run tests",
+            "description": "Validate the package builds successfully and all test targets are properly configured",
+            "dependencies": [
+              "1.3",
+              "1.4"
+            ],
+            "details": "Verification steps:\n1. Run 'swift build' to ensure all targets compile\n2. Run 'swift test' to verify test targets are configured\n3. Run 'swift build -c release' to test release configuration\n4. Run 'swift run HarvestBinCommandsDemo' to verify executable target\n5. Create basic XCTestCase files in each test target\n6. Add .gitignore for .build/, .swiftpm/, and Package.resolved\n7. Document build requirements in README",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement Core Command Infrastructure",
+        "description": "Build the foundation layer in HarvestBinCommandsCore with base protocols, command executor using swift-subprocess, and error handling",
+        "details": "Create core infrastructure components:\n\n1. CommandProtocol.swift:\n```swift\npublic protocol CommandProtocol {\n    var command: String { get }\n    var arguments: [String] { get }\n    var requiresSudo: Bool { get }\n    var affectedProcess: String? { get }\n    func validate() throws\n}\n```\n\n2. CommandExecutor.swift:\n```swift\nimport Subprocess\n\npublic actor CommandExecutor {\n    public static let shared = CommandExecutor()\n    \n    public func execute(_ command: CommandProtocol) async throws -> CommandResult {\n        try command.validate()\n        \n        let executable = command.requiresSudo ? \"sudo\" : command.command\n        let args = command.requiresSudo ? [command.command] + command.arguments : command.arguments\n        \n        let process = try await Subprocess.run(\n            executable: Executable(at: executable),\n            arguments: args,\n            captureOutput: true\n        )\n        \n        let output = try await process.collectOutput()\n        \n        if let processToKill = command.affectedProcess {\n            try await killProcess(processToKill)\n        }\n        \n        return CommandResult(\n            exitCode: process.exitCode ?? -1,\n            standardOutput: String(data: output.standardOutput, encoding: .utf8) ?? \"\",\n            standardError: String(data: output.standardError, encoding: .utf8) ?? \"\"\n        )\n    }\n}\n```\n\n3. CommandError.swift:\n```swift\npublic enum CommandError: Error, LocalizedError {\n    case validationFailed(String)\n    case executionFailed(exitCode: Int, stderr: String)\n    case sudoRequired\n    case outputParsingFailed\n    case unknownDomain(String)\n    case unknownKey(String)\n    case typeMismatch(expected: String, actual: String)\n    \n    public var errorDescription: String? { ... }\n}\n```\n\n4. OutputParser.swift for parsing command outputs\n5. PrivilegeEscalation.swift for sudo handling",
+        "testStrategy": "1. Mock subprocess execution for unit testing\n2. Test command validation logic\n3. Verify error handling for different failure scenarios\n4. Test output parsing with various formats\n5. Verify async execution doesn't block\n6. Test sudo command handling\n7. Mock process killing functionality",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define CommandProtocol and related types",
+            "description": "Create the base protocol for all commands with validation requirements and associated error types",
+            "dependencies": [],
+            "details": "Define CommandProtocol with command, arguments, requiresSudo, affectedProcess properties and validate() method. Create CommandError enum with cases for validationFailed, executionFailed, permissionDenied, timeout, and invalidOutput. Include Sendable conformance for actor compatibility.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement CommandResult structure",
+            "description": "Create the result type that encapsulates command execution output, errors, and exit codes",
+            "dependencies": [],
+            "details": "Create CommandResult struct with exitCode: Int32, standardOutput: String, standardError: String, executionTime: TimeInterval. Add convenience computed properties like isSuccess, hasOutput, combinedOutput. Make it Sendable for async contexts.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build CommandExecutor actor core",
+            "description": "Implement the actor-based command executor with basic subprocess execution using swift-subprocess",
+            "dependencies": [
+              "2.1",
+              "2.2"
+            ],
+            "details": "Create CommandExecutor as a public actor with shared singleton. Implement basic execute() method using Subprocess library. Handle environment setup, working directory, and basic async execution flow. Include execution timeout handling with default 30 seconds.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement sudo privilege escalation",
+            "description": "Add secure sudo command execution with proper privilege handling and security considerations",
+            "dependencies": [
+              "2.3"
+            ],
+            "details": "Extend CommandExecutor to detect requiresSudo commands and prepend sudo to execution. Implement sudo password caching detection and prompt handling. Add security validations to prevent command injection. Handle sudo timeout and authentication failures gracefully.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create output parsing utilities",
+            "description": "Build utilities for parsing and processing command output in various formats",
+            "dependencies": [
+              "2.2"
+            ],
+            "details": "Create OutputParser with methods for parsing JSON output, plist format, key-value pairs, and line-based output. Add trim/clean utilities for standardOutput and standardError. Include encoding detection and UTF-8 handling. Support streaming output for long-running commands.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement process killing functionality",
+            "description": "Add capability to kill affected processes after command execution when specified",
+            "dependencies": [
+              "2.3"
+            ],
+            "details": "Extend CommandExecutor with killProcess() method using killall command. Implement safe process name validation. Add delay before killing to allow settings to save. Handle cases where process doesn't exist. Support both SIGTERM and SIGKILL signals.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Build comprehensive error handling system",
+            "description": "Create robust error handling with detailed error messages and recovery suggestions",
+            "dependencies": [
+              "2.3",
+              "2.4",
+              "2.5",
+              "2.6"
+            ],
+            "details": "Implement error mapping from subprocess exit codes to CommandError cases. Add detailed error descriptions with recovery suggestions. Handle network errors, permission issues, missing commands, and malformed output. Include error context preservation and logging capabilities.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create unit tests with mocking framework",
+            "description": "Develop comprehensive unit tests using XCTest with subprocess mocking for all core components",
+            "dependencies": [
+              "2.1",
+              "2.2",
+              "2.3",
+              "2.4",
+              "2.5",
+              "2.6",
+              "2.7"
+            ],
+            "details": "Create MockSubprocess for testing command execution without system calls. Test all CommandProtocol validation scenarios. Verify CommandExecutor async behavior and timeout handling. Test sudo command construction and security. Mock process killing with various scenarios. Test error handling edge cases.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Build Defaults Type System",
+        "description": "Implement type-safe value handling for macOS defaults in HarvestBinCommandsDefaults with support for all value types",
+        "details": "Create the defaults value type system:\n\n1. DefaultsValue.swift:\n```swift\npublic protocol DefaultsValue {\n    static var defaultsType: String { get }\n    func toDefaultsArgument() -> String\n    static func from(defaultsOutput: String) throws -> Self\n}\n\nextension Bool: DefaultsValue {\n    public static var defaultsType: String { \"bool\" }\n    public func toDefaultsArgument() -> String { self ? \"true\" : \"false\" }\n    public static func from(defaultsOutput: String) throws -> Bool {\n        switch defaultsOutput.trimmingCharacters(in: .whitespacesAndNewlines) {\n        case \"1\", \"true\", \"TRUE\", \"YES\": return true\n        case \"0\", \"false\", \"FALSE\", \"NO\": return false\n        default: throw CommandError.typeMismatch(expected: \"bool\", actual: defaultsOutput)\n        }\n    }\n}\n\nextension String: DefaultsValue { ... }\nextension Int: DefaultsValue { ... }\nextension Float: DefaultsValue { ... }\nextension Array: DefaultsValue where Element: DefaultsValue { ... }\nextension Dictionary: DefaultsValue where Key == String, Value: DefaultsValue { ... }\n```\n\n2. DefaultsDomain.swift:\n```swift\npublic struct DefaultsDomain {\n    public let identifier: String\n    public let isGlobal: Bool\n    \n    public static let NSGlobalDomain = DefaultsDomain(identifier: \"NSGlobalDomain\", isGlobal: true)\n    public static let dock = DefaultsDomain(identifier: \"com.apple.dock\", isGlobal: false)\n    public static let finder = DefaultsDomain(identifier: \"com.apple.finder\", isGlobal: false)\n    // ... other domains\n}\n```\n\n3. DefaultsKey.swift with known keys and their types\n4. Validation logic for domains and keys",
+        "testStrategy": "1. Test all DefaultsValue implementations with various inputs\n2. Verify type conversions work correctly\n3. Test error handling for invalid type conversions\n4. Validate domain and key combinations\n5. Test array and dictionary parsing\n6. Verify special value handling (e.g., -globalDomain)",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement DefaultsValue Protocol",
+            "description": "Create the DefaultsValue protocol with required methods for type-safe value handling",
+            "dependencies": [],
+            "details": "Define the protocol in DefaultsValue.swift with static defaultsType property, toDefaultsArgument() method, and from(defaultsOutput:) static method. This protocol will serve as the foundation for all type conformances.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Add Basic Type Conformances",
+            "description": "Implement DefaultsValue conformance for Bool, String, Int, and Float types",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Create extensions for Bool, String, Int, and Float types. Bool should handle true/false, YES/NO, 1/0 variations. String should handle quoted and unquoted values. Int and Float should parse numeric strings with proper error handling.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Complex Type Support",
+            "description": "Add DefaultsValue conformance for Array and Dictionary types with generic constraints",
+            "dependencies": [
+              "3.1",
+              "3.2"
+            ],
+            "details": "Implement Array<T: DefaultsValue> and Dictionary<String, T: DefaultsValue> conformances. Handle parsing of plist-style output formats, nested structures, and proper serialization to defaults arguments format.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create DefaultsDomain Structure",
+            "description": "Build DefaultsDomain struct with known system domains and validation logic",
+            "dependencies": [],
+            "details": "Define DefaultsDomain struct with static properties for NSGlobalDomain, com.apple.finder, com.apple.dock, etc. Include validation methods and support for custom domain strings. Handle special cases like -globalDomain flag.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement DefaultsKey System",
+            "description": "Create type-safe key system with validation and known system keys",
+            "dependencies": [
+              "3.4"
+            ],
+            "details": "Build DefaultsKey struct or enum system that provides type-safe access to known keys like AppleShowAllFiles, tilesize, etc. Include validation for key format and support for custom keys with proper namespacing.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Add Type Conversion Error Handling",
+            "description": "Implement comprehensive error handling for type conversion failures",
+            "dependencies": [
+              "3.2",
+              "3.3"
+            ],
+            "details": "Create DefaultsConversionError enum with cases for invalid format, type mismatch, parsing failure, etc. Ensure all from(defaultsOutput:) implementations throw descriptive errors. Handle edge cases like empty strings, null values, and malformed data.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Write Comprehensive Unit Tests",
+            "description": "Create unit tests for all DefaultsValue implementations and type conversions",
+            "dependencies": [
+              "3.1",
+              "3.2",
+              "3.3",
+              "3.4",
+              "3.5",
+              "3.6"
+            ],
+            "details": "Test each type's DefaultsValue conformance with valid and invalid inputs. Verify toDefaultsArgument() output format. Test from(defaultsOutput:) parsing with various formats. Test error cases and edge conditions. Validate Array and Dictionary parsing with nested data. Test domain and key validation logic.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Create Defaults Reader and Writer",
+        "description": "Implement the core defaults read/write functionality with hybrid API design supporting both generic and convenience methods",
+        "details": "Implement defaults operations:\n\n1. DefaultsReader.swift:\n```swift\npublic struct DefaultsReader {\n    public func read<T: DefaultsValue>(\n        _ type: T.Type,\n        key: String,\n        domain: String = \"NSGlobalDomain\"\n    ) async throws -> T {\n        let command = DefaultsReadCommand(key: key, domain: domain)\n        let result = try await CommandExecutor.shared.execute(command)\n        \n        guard result.exitCode == 0 else {\n            throw CommandError.executionFailed(exitCode: result.exitCode, stderr: result.standardError)\n        }\n        \n        return try T.from(defaultsOutput: result.standardOutput)\n    }\n    \n    // Convenience methods\n    public func readBool(key: String, domain: String = \"NSGlobalDomain\") async throws -> Bool {\n        try await read(Bool.self, key: key, domain: domain)\n    }\n    \n    public func readString(key: String, domain: String = \"NSGlobalDomain\") async throws -> String {\n        try await read(String.self, key: key, domain: domain)\n    }\n}\n```\n\n2. DefaultsWriter.swift:\n```swift\npublic struct DefaultsWriter {\n    public func write<T: DefaultsValue>(\n        _ value: T,\n        forKey key: String,\n        domain: String = \"NSGlobalDomain\"\n    ) async throws {\n        let command = DefaultsWriteCommand(value: value, key: key, domain: domain)\n        let result = try await CommandExecutor.shared.execute(command)\n        \n        guard result.exitCode == 0 else {\n            throw CommandError.executionFailed(exitCode: result.exitCode, stderr: result.standardError)\n        }\n    }\n    \n    // Convenience methods\n    public func setBool(_ value: Bool, forKey key: String, domain: String = \"NSGlobalDomain\") async throws {\n        try await write(value, forKey: key, domain: domain)\n    }\n}\n```\n\n3. Domain-specific extensions for known settings\n4. Command implementations for read/write operations",
+        "testStrategy": "1. Test reading various value types from defaults\n2. Test writing and verifying values are persisted\n3. Mock defaults command execution\n4. Test error handling for non-existent keys\n5. Verify domain handling\n6. Test convenience methods match generic API",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement DefaultsReader with generic method",
+            "description": "Create DefaultsReader struct with generic read method supporting type-safe reading from defaults",
+            "dependencies": [],
+            "details": "Implement DefaultsReader.swift with:\n- Generic read<T: DefaultsValue> method\n- Support for domain parameter (default: NSGlobalDomain)\n- Integration with CommandExecutor for executing defaults read commands\n- Proper async/await handling\n- Error handling for command execution failures\n- Type conversion using DefaultsValue protocol",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Add convenience reader methods",
+            "description": "Implement convenience methods on DefaultsReader for common types (Bool, Int, String, etc.)",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "Add convenience methods:\n- readBool(key:domain:)\n- readInt(key:domain:)\n- readFloat(key:domain:)\n- readString(key:domain:)\n- readArray(key:domain:)\n- readDictionary(key:domain:)\nEach method should internally use the generic read method",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement DefaultsWriter with type-safe writing",
+            "description": "Create DefaultsWriter struct with generic write method and type-safe value handling",
+            "dependencies": [],
+            "details": "Implement DefaultsWriter.swift with:\n- Generic write<T: DefaultsValue> method\n- Support for domain parameter\n- Integration with CommandExecutor for executing defaults write commands\n- Proper value serialization using DefaultsValue.toDefaultsArgument()\n- Async/await support\n- Error handling for write failures",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create command objects for read/write operations",
+            "description": "Implement DefaultsReadCommand and DefaultsWriteCommand conforming to CommandProtocol",
+            "dependencies": [],
+            "details": "Create command objects:\n- DefaultsReadCommand with key, domain properties\n- DefaultsWriteCommand with key, value, domain, type properties\n- Implement buildArguments() for both commands\n- Handle special domains like NSGlobalDomain\n- Support for type-specific arguments (-bool, -int, etc.)",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement domain-specific extensions",
+            "description": "Add extensions for common domains and global domain handling",
+            "dependencies": [
+              "4.1",
+              "4.2",
+              "4.3"
+            ],
+            "details": "Implement domain extensions:\n- Extension methods for common domains (com.apple.dock, com.apple.finder)\n- Global domain convenience methods\n- Domain validation logic\n- Helper methods for domain-specific operations\n- Constants for well-known domain names",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Add error handling and integration tests",
+            "description": "Implement comprehensive error handling for missing keys and create integration tests",
+            "dependencies": [
+              "4.1",
+              "4.2",
+              "4.3",
+              "4.4",
+              "4.5"
+            ],
+            "details": "Implement error handling and tests:\n- Custom errors for missing keys, invalid types, domain errors\n- Error recovery strategies\n- Unit tests for all reader/writer methods\n- Integration tests with mocked CommandExecutor\n- Test error scenarios (missing keys, type mismatches)\n- Verify domain handling and special cases",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Implement Dock Commands",
+        "description": "Create all Dock-related commands including icon size, position, auto-hide, and effects with automatic Dock restart",
+        "details": "Implement Dock commands in HarvestBinCommands:\n\n1. DockCommands.swift:\n```swift\npublic extension Defaults {\n    struct Dock {\n        private let writer = DefaultsWriter()\n        private let reader = DefaultsReader()\n        \n        // Icon size\n        public func setIconSize(_ size: Int) async throws {\n            guard size >= 16 && size <= 512 else {\n                throw CommandError.validationFailed(\"Icon size must be between 16 and 512\")\n            }\n            try await writer.setInt(size, forKey: \"tilesize\", domain: \"com.apple.dock\")\n        }\n        \n        // Position\n        public enum Position: String {\n            case left, bottom, right\n        }\n        \n        public func setPosition(_ position: Position) async throws {\n            try await writer.setString(position.rawValue, forKey: \"orientation\", domain: \"com.apple.dock\")\n        }\n        \n        // Auto-hide\n        public func setAutoHide(_ enabled: Bool) async throws {\n            try await writer.setBool(enabled, forKey: \"autohide\", domain: \"com.apple.dock\")\n        }\n        \n        // Show recents\n        public func setShowRecents(_ show: Bool) async throws {\n            try await writer.setBool(show, forKey: \"show-recents\", domain: \"com.apple.dock\")\n        }\n        \n        // Static only\n        public func setStaticOnly(_ enabled: Bool) async throws {\n            try await writer.setBool(enabled, forKey: \"static-only\", domain: \"com.apple.dock\")\n        }\n        \n        // Minimize effect\n        public enum MinimizeEffect: String {\n            case genie, scale\n        }\n        \n        public func setMinimizeEffect(_ effect: MinimizeEffect) async throws {\n            try await writer.setString(effect.rawValue, forKey: \"mineffect\", domain: \"com.apple.dock\")\n        }\n    }\n}\n```\n\n2. Ensure all Dock commands trigger `killall Dock`\n3. Add validation for all parameters\n4. Include commands for:\n   - Icon size (16-512)\n   - Position (left, bottom, right)\n   - Auto-hide and delay\n   - Show recents\n   - Static-only mode\n   - Minimize effects\n   - Mission Control animations",
+        "testStrategy": "1. Test each Dock command with valid inputs\n2. Verify validation rejects invalid parameters\n3. Mock command execution and verify arguments\n4. Test that Dock restart is triggered\n5. Integration test with actual defaults (if available)\n6. Verify enum values are handled correctly",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Dock icon size configuration",
+            "description": "Create setIconSize command with validation for size range (16-512) and proper Dock restart trigger",
+            "dependencies": [],
+            "details": "Implement in DockCommands.swift:\n- Create setIconSize(_ size: Int) method\n- Add validation for size range 16-512\n- Use DefaultsWriter to set 'tilesize' in com.apple.dock domain\n- Ensure affectedProcess is set to 'Dock' for automatic restart\n- Include proper error handling with CommandError.validationFailed",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Dock position settings",
+            "description": "Create setPosition command with enum-based position values (left, bottom, right) and Dock restart",
+            "dependencies": [],
+            "details": "Implement position configuration:\n- Define Position enum with cases: left, bottom, right\n- Create setPosition(_ position: Position) method\n- Map enum to 'orientation' key values in com.apple.dock\n- Set affectedProcess to 'Dock' for restart\n- Add validation to ensure only valid positions are accepted",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Dock auto-hide functionality",
+            "description": "Create auto-hide related commands including delay and animation time with proper validation",
+            "dependencies": [],
+            "details": "Implement auto-hide commands:\n- setAutoHide(_ enable: Bool) for 'autohide' key\n- setAutoHideDelay(_ delay: Double) with validation for non-negative values\n- setAutoHideAnimationTime(_ time: Double) with validation\n- All commands should trigger Dock restart\n- Use proper Double type handling in DefaultsWriter",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Dock minimize effects",
+            "description": "Create minimize effect commands with enum support for genie/scale effects and minimize to application",
+            "dependencies": [],
+            "details": "Implement minimize effect settings:\n- Define MinimizeEffect enum: genie, scale\n- Create setMinimizeEffect(_ effect: MinimizeEffect) method\n- Implement setMinimizeToApplication(_ enable: Bool)\n- Map enums to proper string values for 'mineffect' key\n- Ensure Dock restart on all changes",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement show recents and static-only modes",
+            "description": "Create commands for showing recent applications and static-only Dock mode",
+            "dependencies": [],
+            "details": "Implement remaining Dock commands:\n- setShowRecents(_ show: Bool) for 'show-recents' key\n- setStaticOnly(_ enable: Bool) for 'static-only' key\n- Both commands must trigger Dock restart\n- Add proper boolean handling in DefaultsWriter\n- Ensure consistent error handling across all commands",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Ensure proper Dock restart triggers and test all commands",
+            "description": "Verify all Dock commands properly trigger restart and create comprehensive tests",
+            "dependencies": [
+              "5.1",
+              "5.2",
+              "5.3",
+              "5.4",
+              "5.5"
+            ],
+            "details": "Complete Dock implementation:\n- Verify all commands set affectedProcess = 'Dock'\n- Test CommandExecutor properly kills and restarts Dock\n- Create unit tests for all validation logic\n- Test enum to string conversions\n- Mock subprocess execution in tests\n- Verify error messages are descriptive\n- Integration test full command flow if possible",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement Dock icon size configuration",
+            "description": "Create setIconSize command with validation for size range (16-512) and proper Dock restart trigger",
+            "dependencies": [],
+            "details": "Implement in DockCommands.swift using DefaultsWriter to set com.apple.dock.tilesize with integer value validation. Ensure size is within valid range and trigger Dock restart after successful write.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement Dock position settings",
+            "description": "Create setPosition command with enum handling for left/bottom/right positions and Dock restart",
+            "dependencies": [],
+            "details": "Define Position enum with cases for left, bottom, right. Map enum values to appropriate defaults string values. Write to com.apple.dock.orientation key and trigger Dock restart.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Implement auto-hide functionality",
+            "description": "Create auto-hide commands including setAutoHide, setAutoHideDelay, and animation duration settings",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Implement three commands: setAutoHide (boolean), setAutoHideDelay (float validation), and setAutoHideAnimationDuration (float). All require Dock restart after modification.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Implement minimize effects configuration",
+            "description": "Create setMinimizeEffect command with enum for genie/scale effects and proper validation",
+            "dependencies": [
+              "5.2"
+            ],
+            "details": "Define MinimizeEffect enum with genie and scale cases. Map to appropriate string values for com.apple.dock.mineffect key. Include Dock restart trigger.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Implement show recents and static-only modes",
+            "description": "Create commands for setShowRecents and setStaticOnly with boolean handling",
+            "dependencies": [
+              "5.3"
+            ],
+            "details": "Implement setShowRecents for com.apple.dock.show-recents and setStaticOnly for com.apple.dock.static-only keys. Both are boolean values requiring Dock restart.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Ensure Dock restart triggers for all commands",
+            "description": "Verify and test that all Dock commands properly trigger killall Dock after successful defaults write",
+            "dependencies": [
+              "5.1",
+              "5.2",
+              "5.3",
+              "5.4",
+              "5.5"
+            ],
+            "details": "Add comprehensive tests to verify each command calls ProcessRestarter.restart(\"Dock\") after successful write. Test error cases don't trigger restart. Verify restart command construction.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Implement Finder and System Commands",
+        "description": "Create Finder commands for file visibility, UI elements, and system commands for desktop icons and UI settings",
+        "details": "Implement Finder and System commands:\n\n1. FinderCommands.swift:\n```swift\npublic extension Defaults {\n    struct Finder {\n        private let writer = DefaultsWriter()\n        \n        // Show hidden files\n        public func setShowHiddenFiles(_ show: Bool) async throws {\n            try await writer.setBool(show, forKey: \"AppleShowAllFiles\", domain: \"com.apple.finder\")\n        }\n        \n        // Show file extensions\n        public func setShowFileExtensions(_ show: Bool) async throws {\n            try await writer.setBool(show, forKey: \"AppleShowAllExtensions\", domain: \"NSGlobalDomain\")\n        }\n        \n        // Path bar\n        public func setShowPathBar(_ show: Bool) async throws {\n            try await writer.setBool(show, forKey: \"ShowPathbar\", domain: \"com.apple.finder\")\n        }\n        \n        // Status bar\n        public func setShowStatusBar(_ show: Bool) async throws {\n            try await writer.setBool(show, forKey: \"ShowStatusBar\", domain: \"com.apple.finder\")\n        }\n        \n        // Default view style\n        public enum ViewStyle: String {\n            case icon = \"icnv\"\n            case list = \"Nlsv\"\n            case column = \"clmv\"\n            case gallery = \"glyv\"\n        }\n        \n        public func setDefaultViewStyle(_ style: ViewStyle) async throws {\n            try await writer.setString(style.rawValue, forKey: \"FXPreferredViewStyle\", domain: \"com.apple.finder\")\n        }\n    }\n}\n```\n\n2. SystemCommands.swift:\n```swift\npublic extension Defaults {\n    struct System {\n        // Desktop icons\n        public func setShowDesktopIcons(_ show: Bool) async throws {\n            try await writer.setBool(!show, forKey: \"CreateDesktop\", domain: \"com.apple.finder\")\n        }\n        \n        // Transparency\n        public func setReduceTransparency(_ reduce: Bool) async throws {\n            try await writer.setBool(reduce, forKey: \"reduceTransparency\", domain: \"com.apple.universalaccess\")\n        }\n        \n        // Scrollbars\n        public enum ScrollbarVisibility: String {\n            case automatic = \"Automatic\"\n            case whenScrolling = \"WhenScrolling\"\n            case always = \"Always\"\n        }\n        \n        public func setScrollbarVisibility(_ visibility: ScrollbarVisibility) async throws {\n            try await writer.setString(visibility.rawValue, forKey: \"AppleShowScrollBars\", domain: \"NSGlobalDomain\")\n        }\n    }\n}\n```\n\n3. Ensure Finder commands trigger `killall Finder`\n4. Add all documented Finder preferences",
+        "testStrategy": "1. Test each command with valid parameters\n2. Verify process restart triggers\n3. Test enum handling for view styles\n4. Mock execution and verify command structure\n5. Test global vs app-specific domains\n6. Validate boolean inversions (CreateDesktop)",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Finder hidden files command",
+            "description": "Create setShowHiddenFiles method to toggle visibility of hidden files in Finder using AppleShowAllFiles key",
+            "dependencies": [],
+            "details": "Implement the setShowHiddenFiles(_ show: Bool) method in Finder struct. Use DefaultsWriter to set boolean value for 'AppleShowAllFiles' key in 'com.apple.finder' domain. This controls whether Finder shows files that start with a dot or are otherwise marked as hidden.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Finder file extensions command",
+            "description": "Create setShowFileExtensions method to control display of file extensions in Finder",
+            "dependencies": [],
+            "details": "Implement setShowFileExtensions(_ show: Bool) method using DefaultsWriter to set 'NSGlobalDomain' AppleShowAllExtensions key. This is a global setting that affects all file browsers, not just Finder. No domain parameter needed as it's a global preference.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Finder UI elements commands",
+            "description": "Create methods for path bar and status bar visibility in Finder windows",
+            "dependencies": [],
+            "details": "Implement setShowPathBar(_ show: Bool) and setShowStatusBar(_ show: Bool) methods. Use 'ShowPathbar' and 'ShowStatusBar' keys respectively in 'com.apple.finder' domain. These control the visibility of the path navigation bar and file status bar at the bottom of Finder windows.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Finder view style command",
+            "description": "Create setDefaultViewStyle method with enum support for icon, list, column, and gallery views",
+            "dependencies": [],
+            "details": "Implement setDefaultViewStyle(_ style: ViewStyle) with ViewStyle enum containing cases: icon='icnv', list='Nlsv', column='clmv', gallery='glyv'. Use 'FXPreferredViewStyle' key in 'com.apple.finder' domain. Include enum rawValue mapping to the four-character codes Finder expects.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement system UI transparency commands",
+            "description": "Create methods for menu bar transparency and overall UI translucency settings",
+            "dependencies": [],
+            "details": "Implement setReduceTransparency(_ reduce: Bool) for 'reduceTransparency' key and setMenuBarTransparency(_ enable: Bool) for 'AppleEnableMenuBarTransparency' key, both in NSGlobalDomain. These affect system-wide UI appearance and accessibility settings.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement desktop icon visibility command",
+            "description": "Create setShowDesktopIcons method to control whether icons appear on the desktop",
+            "dependencies": [],
+            "details": "Implement setShowDesktopIcons(_ show: Bool) method. Note the inverted logic: use !show for 'CreateDesktop' key in 'com.apple.finder' domain. When CreateDesktop is false, desktop icons are shown; when true, they're hidden. This controls visibility of all desktop items including files and mounted volumes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement process restart handling",
+            "description": "Add Finder restart functionality to all commands that modify Finder settings",
+            "dependencies": [
+              "6.1",
+              "6.2",
+              "6.3",
+              "6.4",
+              "6.6"
+            ],
+            "details": "After each Finder-specific command execution (hidden files, path bar, status bar, view style, desktop icons), trigger Finder restart using killall command. System-wide settings (transparency, file extensions) don't require Finder restart. Ensure proper error handling if killall fails.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Implement Screenshot, Safari, and Input Commands",
+        "description": "Create commands for screenshot settings, Safari developer options, and input device configurations",
+        "details": "Implement remaining command categories:\n\n1. ScreenshotCommands.swift:\n```swift\npublic extension Defaults {\n    struct Screenshot {\n        // Location\n        public func setLocation(_ path: String) async throws {\n            let url = URL(fileURLWithPath: path)\n            guard FileManager.default.fileExists(atPath: url.path) else {\n                throw CommandError.validationFailed(\"Directory does not exist\")\n            }\n            try await writer.setString(path, forKey: \"location\", domain: \"com.apple.screencapture\")\n        }\n        \n        // Format\n        public enum Format: String {\n            case png, jpg, pdf, tiff, bmp\n        }\n        \n        public func setFormat(_ format: Format) async throws {\n            try await writer.setString(format.rawValue, forKey: \"type\", domain: \"com.apple.screencapture\")\n        }\n        \n        // Include date\n        public func setIncludeDate(_ include: Bool) async throws {\n            try await writer.setBool(include, forKey: \"include-date\", domain: \"com.apple.screencapture\")\n        }\n        \n        // Shadow\n        public func setDisableShadow(_ disable: Bool) async throws {\n            try await writer.setBool(disable, forKey: \"disable-shadow\", domain: \"com.apple.screencapture\")\n        }\n    }\n}\n```\n\n2. SafariCommands.swift:\n```swift\npublic extension Defaults {\n    struct Safari {\n        // Developer menu\n        public func setShowDeveloperMenu(_ show: Bool) async throws {\n            try await writer.setBool(show, forKey: \"IncludeDevelopMenu\", domain: \"com.apple.Safari\")\n        }\n        \n        // Debug menu\n        public func setShowDebugMenu(_ show: Bool) async throws {\n            try await writer.setBool(show, forKey: \"IncludeInternalDebugMenu\", domain: \"com.apple.Safari\")\n        }\n        \n        // Status bar\n        public func setShowStatusBar(_ show: Bool) async throws {\n            try await writer.setBool(show, forKey: \"ShowOverlayStatusBar\", domain: \"com.apple.Safari\")\n        }\n    }\n}\n```\n\n3. InputCommands.swift:\n```swift\npublic extension Defaults {\n    struct Input {\n        // Mouse tracking speed\n        public func setMouseTrackingSpeed(_ speed: Float) async throws {\n            guard speed >= 0 && speed <= 3 else {\n                throw CommandError.validationFailed(\"Speed must be between 0 and 3\")\n            }\n            try await writer.setFloat(speed, forKey: \"com.apple.mouse.scaling\", domain: \"NSGlobalDomain\")\n        }\n        \n        // Natural scrolling\n        public func setNaturalScrolling(_ enabled: Bool) async throws {\n            try await writer.setBool(enabled, forKey: \"com.apple.swipescrolldirection\", domain: \"NSGlobalDomain\")\n        }\n        \n        // Key repeat\n        public func setKeyRepeatRate(_ rate: Int) async throws {\n            try await writer.setInt(rate, forKey: \"KeyRepeat\", domain: \"NSGlobalDomain\")\n        }\n    }\n}\n```\n\n4. Ensure proper process restarts (SystemUIServer for screenshots)",
+        "testStrategy": "1. Test parameter validation for all commands\n2. Verify file path validation for screenshot location\n3. Test enum handling for formats\n4. Mock command execution\n5. Verify process restart triggers\n6. Test numeric range validations",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create ScreenshotCommands.swift structure",
+            "description": "Design and implement the base Screenshot command structure with location, format, and shadow settings",
+            "dependencies": [],
+            "details": "Create ScreenshotCommands.swift file extending Defaults with Screenshot struct. Implement setLocation method with path validation ensuring directory exists, setFormat method with enum support (png, jpg, gif, pdf, etc.), and setIncludeShadow for window shadow control. Use DefaultsWriter for all operations and domain 'com.apple.screencapture'.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Safari developer commands",
+            "description": "Create SafariCommands.swift with developer menu, debug options, and experimental features",
+            "dependencies": [],
+            "details": "Implement Safari struct extending Defaults with methods: setShowDevelopMenu, setEnableDebugMenu, setShowFullURL, and experimental features. Use domain 'com.apple.Safari' for all settings. Include proper boolean handling and ensure commands trigger Safari restart through affectedProcess property.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build input device command structure",
+            "description": "Create InputCommands.swift for mouse tracking speed, scrolling behavior, and keyboard settings",
+            "dependencies": [],
+            "details": "Design InputCommands.swift with Mouse and Keyboard nested structs. Mouse should handle setTrackingSpeed (0.0-3.0 range), setNaturalScrolling, and setSecondaryClick. Keyboard should implement setKeyRepeatRate, setInitialKeyRepeatDelay with proper numeric validation. Use NSGlobalDomain for most settings.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Add path validation utilities",
+            "description": "Create validation helpers for file paths and directory existence checks",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "Implement PathValidator utility class with methods: validateDirectory (checks existence and is directory), validateWritableDirectory (checks write permissions), expandTildePath (handles ~ expansion). Integrate with screenshot location command and throw CommandError.validationFailed with descriptive messages.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement numeric range validators",
+            "description": "Build validation system for numeric inputs with configurable ranges",
+            "dependencies": [
+              "7.3"
+            ],
+            "details": "Create NumericValidator with validateRange method supporting Int and Double types. Implement specific validators: MouseTrackingSpeedValidator (0.0-3.0), KeyRepeatRateValidator (1-120), KeyRepeatDelayValidator (15-120). Include descriptive error messages indicating valid ranges when validation fails.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Configure process restart mappings",
+            "description": "Set up process restart requirements for each command category",
+            "dependencies": [
+              "7.1",
+              "7.2",
+              "7.3"
+            ],
+            "details": "Create ProcessRestartRegistry mapping command types to affected processes: Screenshot commands -> 'SystemUIServer', Safari commands -> 'Safari', Input commands -> 'cfprefsd' and 'SystemUIServer'. Ensure CommandProtocol implementations return correct affectedProcess values for automatic restart handling.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Add format enum support",
+            "description": "Implement type-safe enums for screenshot formats and other configurable options",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "Create ScreenshotFormat enum with cases: png, jpg, gif, pdf, tiff. Implement RawRepresentable conformance for string conversion. Add similar enums for SafariDebugLevel and MouseButtonAction. Include validation in respective command methods to ensure only valid enum values are accepted.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create comprehensive unit tests",
+            "description": "Write tests covering all commands, validators, and edge cases",
+            "dependencies": [
+              "7.4",
+              "7.5",
+              "7.6",
+              "7.7"
+            ],
+            "details": "Implement test classes: ScreenshotCommandsTests (path validation, format handling), SafariCommandsTests (boolean settings, process restart), InputCommandsTests (range validation, NSGlobalDomain usage). Mock DefaultsWriter, test error cases, verify CommandProtocol conformance, and ensure 100% coverage of validation logic.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Implement Administrative Commands",
+        "description": "Create sudo-required commands for SSH key management, auto-login configuration, and system administration",
+        "details": "Implement administrative commands that require sudo:\n\n1. AdministrativeCommands.swift:\n```swift\npublic struct AdministrativeCommands {\n    // SSH Key Generation\n    public struct SSHKeyCommand: CommandProtocol {\n        public let keyType: KeyType\n        public let outputPath: String\n        public let comment: String?\n        \n        public enum KeyType: String {\n            case rsa = \"rsa\"\n            case ed25519 = \"ed25519\"\n            case ecdsa = \"ecdsa\"\n        }\n        \n        public var command: String { \"ssh-keygen\" }\n        public var arguments: [String] {\n            var args = [\"-t\", keyType.rawValue, \"-f\", outputPath, \"-N\", \"\"]\n            if let comment = comment {\n                args += [\"-C\", comment]\n            }\n            return args\n        }\n        public var requiresSudo: Bool { false }\n        public var affectedProcess: String? { nil }\n        \n        public func validate() throws {\n            let url = URL(fileURLWithPath: outputPath)\n            guard !FileManager.default.fileExists(atPath: url.path) else {\n                throw CommandError.validationFailed(\"Key file already exists\")\n            }\n        }\n    }\n    \n    // Auto-login configuration\n    public struct AutoLoginCommand: CommandProtocol {\n        public let username: String\n        public let enabled: Bool\n        \n        public var command: String { \"defaults\" }\n        public var arguments: [String] {\n            if enabled {\n                return [\"write\", \"/Library/Preferences/com.apple.loginwindow\", \"autoLoginUser\", username]\n            } else {\n                return [\"delete\", \"/Library/Preferences/com.apple.loginwindow\", \"autoLoginUser\"]\n            }\n        }\n        public var requiresSudo: Bool { true }\n        public var affectedProcess: String? { nil }\n    }\n    \n    // Clear Dock icons\n    public struct ClearDockCommand: CommandProtocol {\n        public var command: String { \"defaults\" }\n        public var arguments: [String] {\n            [\"write\", \"com.apple.dock\", \"persistent-apps\", \"-array\"]\n        }\n        public var requiresSudo: Bool { false }\n        public var affectedProcess: String? { \"Dock\" }\n    }\n    \n    // Remote access\n    public struct RemoteAccessCommand: CommandProtocol {\n        public let service: Service\n        public let enabled: Bool\n        \n        public enum Service: String {\n            case ssh = \"com.openssh.sshd\"\n            case vnc = \"com.apple.screensharing\"\n        }\n        \n        public var command: String { \"launchctl\" }\n        public var arguments: [String] {\n            [enabled ? \"load\" : \"unload\", \"-w\", \"/System/Library/LaunchDaemons/\\(service.rawValue).plist\"]\n        }\n        public var requiresSudo: Bool { true }\n        public var affectedProcess: String? { nil }\n    }\n}\n```\n\n2. Add proper sudo handling and authorization\n3. Include safety validations\n4. Document risks clearly",
+        "testStrategy": "1. Test command construction for all admin commands\n2. Verify sudo requirement is set correctly\n3. Test validation logic (file existence, etc.)\n4. Mock subprocess execution for sudo commands\n5. Test error handling for permission denied\n6. Verify dangerous operations have safeguards",
+        "priority": "low",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement SSH Key Generation Command",
+            "description": "Create SSHKeyCommand to generate SSH keys with various algorithms (RSA, Ed25519, ECDSA) and validate key generation parameters",
+            "dependencies": [],
+            "details": "Implement SSHKeyCommand with KeyType enum, validate output path, key size parameters, and ensure proper ssh-keygen command construction. Include comment support and validate that output directory exists and is writable.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Auto-Login Configuration Command",
+            "description": "Create AutoLoginCommand to configure automatic user login with proper validation and security checks",
+            "dependencies": [],
+            "details": "Build command to modify auto-login settings using proper system APIs or configuration files. Validate username exists on system, require sudo authorization, and implement safety checks to prevent lockout scenarios.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Dock Clear Command",
+            "description": "Create DockClearCommand to remove all applications from the Dock with safety confirmations",
+            "dependencies": [],
+            "details": "Implement command to clear Dock items using defaults or dockutil. Add confirmation prompts for destructive operations, backup current configuration before clearing, and trigger Dock restart after modification.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Remote Access Control Commands",
+            "description": "Create commands to manage SSH, Screen Sharing, and Remote Management services with security validations",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "Build commands to enable/disable remote services using systemsetup or launchctl. Validate firewall implications, check for existing SSH keys when enabling SSH, and implement network security warnings.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Sudo Authorization Handler",
+            "description": "Create robust sudo handling mechanism with secure password prompting and authorization caching",
+            "dependencies": [],
+            "details": "Implement SudoHandler to manage sudo authentication, handle password prompts securely without echoing, implement authorization timeout tracking, and provide clear error messages for authorization failures.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement Safety Validation Framework",
+            "description": "Create comprehensive validation system for dangerous operations with rollback capabilities",
+            "dependencies": [
+              "8.5"
+            ],
+            "details": "Build SafetyValidator to check system state before dangerous operations, implement rollback mechanisms for failed operations, create backup of critical settings before modification, and add dry-run mode for testing commands.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Build SwiftUI Demo Application",
+        "description": "Create a comprehensive SwiftUI app that allows testing all commands with proper UI, search, and output display",
+        "details": "Create the demo application:\n\n1. Main app structure:\n```swift\n@main\nstruct HarvestBinCommandsDemoApp: App {\n    @StateObject private var commandManager = CommandManager()\n    \n    var body: some Scene {\n        WindowGroup {\n            ContentView()\n                .environmentObject(commandManager)\n        }\n    }\n}\n```\n\n2. CommandManager.swift:\n```swift\n@MainActor\nclass CommandManager: ObservableObject {\n    @Published var categories: [CommandCategory] = []\n    @Published var selectedCategory: CommandCategory?\n    @Published var searchText = \"\"\n    @Published var output: CommandOutput?\n    @Published var isExecuting = false\n    \n    struct CommandCategory {\n        let name: String\n        let icon: String\n        let commands: [DemoCommand]\n    }\n    \n    init() {\n        loadCommands()\n    }\n    \n    func executeCommand(_ command: DemoCommand, parameters: [String: Any]) async {\n        isExecuting = true\n        do {\n            let result = try await command.execute(with: parameters)\n            output = CommandOutput(success: true, result: result)\n        } catch {\n            output = CommandOutput(success: false, error: error)\n        }\n        isExecuting = false\n    }\n}\n```\n\n3. UI Components:\n- Sidebar with categories (Dock, Finder, Screenshot, etc.)\n- Command list with search/filter\n- Detail view with parameter inputs\n- Output console showing results\n- Progress indicator during execution\n\n4. Parameter input handling:\n- Text fields for strings\n- Toggles for booleans\n- Sliders/steppers for numbers\n- Pickers for enums\n- File pickers for paths\n\n5. Sudo command handling with authorization dialog\n\n6. Risk indicators (🟢 Safe, 🟡 Caution, 🔴 Dangerous)",
+        "testStrategy": "1. Test UI navigation between categories\n2. Verify search filtering works correctly\n3. Test parameter validation in UI\n4. Verify command execution from UI\n5. Test output display for success/failure\n6. Test sudo authorization flow\n7. Verify progress indicators during execution",
+        "priority": "medium",
+        "dependencies": [
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create CommandManager Service",
+            "description": "Implement the CommandManager class to handle command execution, state management, and output streaming",
+            "dependencies": [],
+            "details": "Create CommandManager as @MainActor ObservableObject with methods for loading commands, executing with progress tracking, handling sudo authorization, and managing output streams. Include @Published properties for categories, selected command, execution state, and output buffer.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Build Category Sidebar Component",
+            "description": "Create the sidebar view for displaying and navigating command categories",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Implement CategorySidebarView with List showing all command categories, selection binding, category icons, and count badges. Support macOS sidebar styling with NavigationSplitView.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Command List with Search",
+            "description": "Build the main command list view with search and filtering capabilities",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Create CommandListView with searchable List, filter by category and search term, show command name/description/risk level, handle selection state, and support keyboard navigation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Parameter Input Components",
+            "description": "Build dynamic form components for different parameter types",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Implement ParameterInputView supporting text fields, toggles, pickers for enums, file path selectors, number steppers with validation, and optional parameter handling. Create type-specific input components.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Build Output Console View",
+            "description": "Create the console component for displaying command output and errors",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Implement OutputConsoleView with ScrollView for live output, syntax highlighting for different output types, copy functionality, clear button, and auto-scroll to bottom during execution.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement Progress Indicators",
+            "description": "Create progress and status indicators for command execution",
+            "dependencies": [
+              "9.1",
+              "9.5"
+            ],
+            "details": "Build ExecutionProgressView with indeterminate progress for running commands, status text updates, cancel button for long operations, and success/failure state indicators with animations.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Create Sudo Authorization UI",
+            "description": "Build the authorization dialog for sudo-required commands",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Implement SudoAuthorizationView with secure password field, command description display, risk warnings for dangerous operations, and integration with system authorization APIs or password prompt.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement Risk Level Indicators",
+            "description": "Create visual components for displaying command risk levels",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Build RiskLevelView with color-coded badges (green/yellow/red), icons for different risk levels, tooltip explanations, and prominent warnings for high-risk operations.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Add Keyboard Navigation Support",
+            "description": "Implement comprehensive keyboard shortcuts and navigation",
+            "dependencies": [
+              "9.2",
+              "9.3",
+              "9.4"
+            ],
+            "details": "Add keyboard shortcuts for search (Cmd+F), execute (Cmd+Enter), cancel (Escape), navigate categories (arrow keys), and tab through parameters. Implement focus management and accessibility labels.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Create Comprehensive UI Tests",
+            "description": "Build UI tests for all components and user workflows",
+            "dependencies": [
+              "9.1",
+              "9.2",
+              "9.3",
+              "9.4",
+              "9.5",
+              "9.6",
+              "9.7",
+              "9.8",
+              "9.9"
+            ],
+            "details": "Write XCUITests for navigation flows, parameter input validation, command execution, error handling, sudo authorization, search functionality, and keyboard navigation. Include accessibility testing.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Complete Testing, Documentation, and Polish",
+        "description": "Write comprehensive tests for all modules, create documentation, add examples, and optimize performance",
+        "details": "Finalize the package with testing and documentation:\n\n1. Unit Tests:\n- Test coverage >80% for all modules\n- Mock subprocess for command execution tests\n- Test all value type conversions\n- Verify error handling paths\n- Test validation logic\n\n2. Integration Tests:\n- Test command execution flow\n- Verify process restart behavior\n- Test sudo command handling\n- End-to-end scenarios\n\n3. Documentation:\n- README.md with installation and usage\n- API documentation using DocC\n- Usage examples for each command category\n- Migration guide from direct defaults usage\n- Security considerations document\n\n4. Examples:\n```swift\n// Example: Configure Dock\nlet dock = Defaults.Dock()\ntry await dock.setIconSize(48)\ntry await dock.setPosition(.bottom)\ntry await dock.setAutoHide(true)\n\n// Example: Configure Screenshots\nlet screenshots = Defaults.Screenshot()\ntry await screenshots.setLocation(\"~/Desktop/Screenshots\")\ntry await screenshots.setFormat(.png)\ntry await screenshots.setDisableShadow(true)\n```\n\n5. Performance optimization:\n- Batch command execution where possible\n- Efficient subprocess usage\n- Minimize process restarts\n\n6. Polish:\n- Consistent error messages\n- Proper Swift 6 concurrency\n- Memory usage optimization\n- SwiftLint configuration\n\n7. Release preparation:\n- Version 1.0.0 tag\n- CHANGELOG.md\n- Contributing guidelines\n- GitHub Actions CI/CD",
+        "testStrategy": "1. Run full test suite with coverage report\n2. Manual testing of demo app on multiple macOS versions\n3. Performance profiling with Instruments\n4. Documentation review and validation\n5. Security audit of sudo commands\n6. Integration testing with real defaults\n7. Beta testing feedback incorporation",
+        "priority": "low",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Unit Test Suite with 80%+ Coverage",
+            "description": "Develop comprehensive unit tests covering all modules, mocking subprocess execution, testing value conversions, error handling, and validation logic",
+            "dependencies": [],
+            "details": "Set up XCTest framework and create test targets. Write unit tests for DefaultsWriter, DefaultsReader, CommandBuilder, and all command modules. Mock Process execution to test command construction without system interaction. Test all value type conversions (Bool, Int, Float, String, Data). Verify error handling paths including validation failures and subprocess errors. Generate coverage reports and ensure >80% coverage across all modules.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Integration Tests",
+            "description": "Create integration tests for command execution flow, process restart behavior, sudo handling, and end-to-end scenarios",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "Write integration tests that verify complete command execution flow from API call to subprocess execution. Test process restart behavior for Dock and Finder. Create tests for sudo command handling including permission scenarios. Develop end-to-end test scenarios covering common use cases. Set up test fixtures and mock environments for reproducible testing.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Generate API Documentation with DocC",
+            "description": "Create comprehensive API documentation using DocC including type documentation, usage examples, and integration guides",
+            "dependencies": [],
+            "details": "Set up DocC configuration for the package. Document all public APIs with detailed descriptions, parameters, return values, and error conditions. Add code examples for each command category. Create conceptual documentation explaining the architecture and design patterns. Generate DocC archive and ensure proper rendering of all documentation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Write README with Examples",
+            "description": "Create detailed README with installation instructions, usage examples, API reference, and contribution guidelines",
+            "dependencies": [
+              "10.3"
+            ],
+            "details": "Write comprehensive README.md including package overview, installation via SPM, basic usage examples for each command category, API quick reference, troubleshooting guide, and contribution guidelines. Add code snippets demonstrating common use cases. Include badges for test coverage, Swift version, and platform support. Create a changelog documenting version history.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Perform Security Audit for Sudo Commands",
+            "description": "Conduct thorough security review of administrative commands, validate sudo handling, and implement safety measures",
+            "dependencies": [
+              "10.1",
+              "10.2"
+            ],
+            "details": "Review all administrative commands for security vulnerabilities. Validate sudo command construction to prevent injection attacks. Implement input sanitization for all user-provided strings. Add safeguards for dangerous operations like auto-login. Create security documentation outlining best practices. Test permission handling and error scenarios. Implement command validation to reject potentially harmful inputs.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Optimize Performance",
+            "description": "Profile package performance, optimize command execution, reduce memory usage, and improve async operation efficiency",
+            "dependencies": [
+              "10.1",
+              "10.2"
+            ],
+            "details": "Use Instruments to profile memory usage and execution time. Optimize command builder for minimal allocations. Implement caching for frequently used commands. Optimize async/await usage patterns. Reduce string allocations in command construction. Profile and optimize regex patterns used in validation. Create performance benchmarks and document optimization results.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Integrate SwiftLint",
+            "description": "Set up SwiftLint with custom rules, fix all linting issues, and configure for CI integration",
+            "dependencies": [],
+            "details": "Install and configure SwiftLint with appropriate rules for the project. Create .swiftlint.yml with custom configuration. Fix all linting warnings and errors across the codebase. Set up pre-commit hooks for automatic linting. Configure SwiftLint to run in CI pipeline. Document coding standards and style guide. Ensure consistent code formatting throughout the package.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Prepare Release with CI/CD",
+            "description": "Set up continuous integration, create release automation, configure GitHub Actions, and prepare for package distribution",
+            "dependencies": [
+              "10.1",
+              "10.2",
+              "10.5",
+              "10.6",
+              "10.7"
+            ],
+            "details": "Create GitHub Actions workflows for testing, linting, and documentation generation. Set up matrix testing for multiple Swift/macOS versions. Configure automatic release creation with semantic versioning. Create release notes template and automation. Set up code signing if required. Configure package publication to Swift Package Index. Create demo app for showcase. Prepare marketing materials and announcement strategy.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-29T16:00:15.190Z",
+      "updated": "2025-07-29T16:18:59.195Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

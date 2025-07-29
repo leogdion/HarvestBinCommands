@@ -1,0 +1,17 @@
+{
+  "name": "harvestbindemo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "task-master": "task-master",
+    "claude": "claude"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@anthropic-ai/claude-code": "^1.0.62",
+    "task-master-ai": "^0.22.0"
+  }
+}

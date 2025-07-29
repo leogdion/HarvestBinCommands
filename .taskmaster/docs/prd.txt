@@ -1,0 +1,280 @@
+# HarvestBinCommands - Product Requirements Document
+
+## Project Overview
+
+HarvestBinCommands is a comprehensive Swift Package for managing macOS system defaults and commands through a type-safe, modern Swift API. The package provides a well-structured interface for executing system commands, with a particular focus on the macOS `defaults` command system, while also supporting other system administration tasks.
+
+## Goals and Objectives
+
+1. Create a type-safe Swift wrapper for macOS defaults commands
+2. Provide comprehensive validation to prevent system configuration errors
+3. Support all documented macOS defaults commands with proper typing
+4. Enable both programmatic use and manual testing through a demo app
+5. Maintain clean separation between core functionality and specific command implementations
+6. Support modern Swift concurrency with async/await throughout
+
+## Technical Requirements
+
+### Platform and Language
+- **Swift Version**: 6.0 or newer
+- **macOS Deployment Target**: 12.0 or newer
+- **Dependencies**: swift-subprocess (for command execution)
+- **No App Sandboxing**: Required for full system access
+
+### Architecture
+- Modular design with clear separation of concerns
+- Async-only API using Swift concurrency
+- Comprehensive error handling with debugging information
+- Type-safe command construction and validation
+
+## Package Structure
+
+### HarvestBinCommandsCore
+Foundation target providing base infrastructure for command execution.
+
+**Responsibilities:**
+- Integration with swift-subprocess for process management
+- Base protocols for command definition and execution
+- Error types and error handling infrastructure
+- Output parsing and formatting utilities
+- Sudo/privilege escalation support
+- Logging and debugging capabilities
+
+**Key Components:**
+- `CommandProtocol`: Base protocol for all commands
+- `CommandExecutor`: Core execution engine using swift-subprocess
+- `CommandError`: Structured error types with raw output
+- `OutputParser`: Utilities for parsing command output
+- `PrivilegeEscalation`: Handling for sudo commands
+
+### HarvestBinCommandsDefaults
+Specialized target for macOS defaults command handling.
+
+**Responsibilities:**
+- Type-safe defaults read/write operations
+- Value type handling (bool, string, int, float, array, dict)
+- Domain and key validation
+- Hybrid API design implementation
+
+**Key Components:**
+- `DefaultsValue`: Protocol for supported value types
+- `DefaultsReader`: Reading defaults values with type safety
+- `DefaultsWriter`: Writing defaults values with validation
+- `DefaultsDomain`: Known domains with validation
+- `DefaultsKey`: Known keys with type information
+
+**API Design (Hybrid Approach):**
+```swift
+// Low-level generic API
+func write<T: DefaultsValue>(_ value: T, forKey key: String, domain: String) async throws
+
+// Convenience methods
+func setBool(_ value: Bool, forKey key: String, domain: String) async throws
+func setString(_ value: String, forKey key: String, domain: String) async throws
+func setInt(_ value: Int, forKey key: String, domain: String) async throws
+
+// Domain-specific helpers
+extension Defaults.Dock {
+    func setIconSize(_ size: Int) async throws
+    func setPosition(_ position: DockPosition) async throws
+}
+```
+
+### HarvestBinCommands
+Main target containing all command implementations.
+
+**Responsibilities:**
+- Implementation of all defaults commands from documentation
+- Process management commands (killall, etc.)
+- System administration commands
+- Automatic process restart handling
+- Command categorization and organization
+
+**Command Categories:**
+1. **Dock Commands**
+   - Icon size, position, effects
+   - Auto-hide, show recents
+   - Static-only mode
+
+2. **Finder Commands**
+   - Show hidden files, extensions
+   - Path bar, status bar
+   - Folder sorting preferences
+
+3. **Screenshot Commands**
+   - Location, format, shadow
+   - Cursor visibility
+   - Date inclusion
+
+4. **Safari Commands**
+   - Developer menu, debug menu
+   - Privacy settings
+   - Status bar
+
+5. **System Commands**
+   - Desktop icons
+   - UI transparency
+   - Scrollbar behavior
+
+6. **Input Commands**
+   - Mouse and trackpad settings
+   - Keyboard repeat rates
+   - Natural scrolling
+
+7. **Administrative Commands**
+   - SSH key generation and management
+   - Auto-login configuration (sudo)
+   - Remote access settings (sudo)
+   - Clear dock icons
+
+**Automatic Process Restart:**
+- Commands automatically restart affected processes
+- Dock commands trigger `killall Dock`
+- Finder commands trigger `killall Finder`
+- Screenshot commands trigger `killall SystemUIServer`
+
+### HarvestBinCommandsDemo
+SwiftUI demo application for testing all commands.
+
+**Features:**
+- Command list organized by category
+- Search and filter capabilities
+- Parameter input fields for each command
+- "Run" button to execute commands
+- Output display showing:
+  - Success/failure status
+  - Structured error information
+  - Raw command output for debugging
+- Sudo command handling with authorization UI
+- Risk level indicators for dangerous commands
+
+**UI Structure:**
+- Sidebar with command categories
+- Main view with command list
+- Detail view for command execution
+- Output console for results
+
+### Test Targets
+
+**HarvestBinCommandsCoreTests**
+- Command execution mocking
+- Error handling verification
+- Output parsing tests
+- Privilege escalation tests
+
+**HarvestBinCommandsDefaultsTests**
+- Value type conversion tests
+- Domain/key validation tests
+- API usage tests
+
+**HarvestBinCommandsTests**
+- Individual command validation
+- Process restart verification
+- Integration tests with mocked subprocess
+
+## Implementation Phases
+
+### Phase 1: Core Infrastructure
+1. Set up package structure with all targets
+2. Implement HarvestBinCommandsCore with base protocols
+3. Integrate swift-subprocess
+4. Create error handling system
+5. Add comprehensive unit tests
+
+### Phase 2: Defaults System
+1. Implement HarvestBinCommandsDefaults target
+2. Create type-safe value handling
+3. Add domain and key validation
+4. Implement hybrid API design
+5. Add defaults-specific tests
+
+### Phase 3: Command Implementation
+1. Implement all Dock commands
+2. Implement all Finder commands
+3. Implement Screenshot and Safari commands
+4. Implement System and Input commands
+5. Implement Administrative commands
+6. Add automatic process restart logic
+
+### Phase 4: Demo Application
+1. Create SwiftUI app structure
+2. Implement command categorization UI
+3. Add parameter input handling
+4. Create output display with debugging
+5. Implement search and filtering
+6. Add sudo authorization handling
+
+### Phase 5: Testing and Documentation
+1. Complete unit test coverage
+2. Add integration tests
+3. Create comprehensive documentation
+4. Add usage examples
+5. Performance optimization
+
+## Validation Requirements
+
+### Comprehensive Validation
+- Validate all known domains before execution
+- Check key validity for domains
+- Verify value types match expected types
+- Range validation for numeric values
+- Format validation for special values (e.g., dock position)
+- macOS version compatibility checks
+
+### Error Handling
+- Structured errors with specific error codes
+- Human-readable error messages
+- Raw command output for debugging
+- Recovery suggestions where applicable
+
+## Security Considerations
+
+- Sudo commands clearly marked and documented
+- No storage of passwords or credentials
+- Proper authorization UI for privileged commands
+- Clear documentation of command effects
+- Safe defaults for dangerous operations
+
+## Success Criteria
+
+1. All commands from the documentation are implemented
+2. Type-safe API prevents common errors
+3. Comprehensive test coverage (>80%)
+4. Demo app successfully tests all commands
+5. Clear documentation for all public APIs
+6. Performance acceptable for interactive use
+7. Error messages helpful for debugging
+
+## Future Enhancements
+
+1. Command history and undo functionality
+2. Backup and restore capabilities
+3. Profile management for setting groups
+4. Integration with configuration management tools
+5. Additional system commands beyond defaults
+6. Cross-platform support considerations
+
+## Delivery Timeline
+
+Estimated development time: 6-8 weeks
+
+1. Week 1-2: Core infrastructure and defaults system
+2. Week 3-4: Command implementation
+3. Week 5: Demo application
+4. Week 6: Testing and documentation
+5. Week 7-8: Polish and optimization
+
+## Dependencies
+
+- swift-subprocess: Latest version for command execution
+- Swift 6.0 toolchain
+- macOS 12.0+ SDK
+- No additional third-party dependencies
+
+## Notes
+
+- All async APIs to prevent UI blocking
+- Modular design allows selective importing
+- Commands tested on multiple macOS versions
+- Documentation includes usage examples
+- Consider semantic versioning from 1.0.0
