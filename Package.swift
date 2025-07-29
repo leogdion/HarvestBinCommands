@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "HarvestBinCommands",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v12)],
     products: [
         .library(name: "HarvestBinCommandsCore", targets: ["HarvestBinCommandsCore"]),
         .library(name: "HarvestBinCommandsDefaults", targets: ["HarvestBinCommandsDefaults"]),
@@ -11,14 +11,12 @@ let package = Package(
         .executable(name: "HarvestBinCommandsDemo", targets: ["HarvestBinCommandsDemo"])
     ],
     dependencies: [
-        .package(url: "https://github.com/swiftlang/swift-subprocess.git", branch: "main")
+        // Using Foundation.Process instead of external dependencies
     ],
     targets: [
         .target(
             name: "HarvestBinCommandsCore",
-            dependencies: [
-                .product(name: "Subprocess", package: "swift-subprocess")
-            ]
+            dependencies: []
         ),
         .target(
             name: "HarvestBinCommandsDefaults",

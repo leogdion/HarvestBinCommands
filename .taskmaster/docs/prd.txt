@@ -18,7 +18,7 @@ HarvestBinCommands is a comprehensive Swift Package for managing macOS system de
 ### Platform and Language
 - **Swift Version**: 6.0 or newer
 - **macOS Deployment Target**: 12.0 or newer
-- **Dependencies**: swift-subprocess (for command execution)
+- **Dependencies**: Foundation.Process (built-in command execution)
 - **No App Sandboxing**: Required for full system access
 
 ### Architecture
@@ -33,7 +33,7 @@ HarvestBinCommands is a comprehensive Swift Package for managing macOS system de
 Foundation target providing base infrastructure for command execution.
 
 **Responsibilities:**
-- Integration with swift-subprocess for process management
+- Integration with Foundation.Process for command execution
 - Base protocols for command definition and execution
 - Error types and error handling infrastructure
 - Output parsing and formatting utilities
@@ -42,7 +42,7 @@ Foundation target providing base infrastructure for command execution.
 
 **Key Components:**
 - `CommandProtocol`: Base protocol for all commands
-- `CommandExecutor`: Core execution engine using swift-subprocess
+- `CommandExecutor`: Core execution engine using Foundation.Process
 - `CommandError`: Structured error types with raw output
 - `OutputParser`: Utilities for parsing command output
 - `PrivilegeEscalation`: Handling for sudo commands
@@ -177,7 +177,7 @@ SwiftUI demo application for testing all commands.
 ### Phase 1: Core Infrastructure
 1. Set up package structure with all targets
 2. Implement HarvestBinCommandsCore with base protocols
-3. Integrate swift-subprocess
+3. Implement Foundation.Process integration
 4. Create error handling system
 5. Add comprehensive unit tests
 
@@ -266,7 +266,7 @@ Estimated development time: 6-8 weeks
 
 ## Dependencies
 
-- swift-subprocess: Latest version for command execution
+- Foundation.Process: Built-in macOS process execution
 - Swift 6.0 toolchain
 - macOS 12.0+ SDK
 - No additional third-party dependencies

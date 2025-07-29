@@ -9,7 +9,7 @@
         "testStrategy": "1. Verify package builds successfully with swift build\n2. Ensure all targets are created in correct directories\n3. Test import statements work between targets\n4. Verify swift-subprocess dependency resolves correctly\n5. Run swift test to ensure test targets are configured properly",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -17,7 +17,7 @@
             "description": "Create the main Package.swift file with Swift 6.0 tools version, defining all targets and the swift-subprocess dependency",
             "dependencies": [],
             "details": "Create Package.swift at the root level with:\n- Swift tools version 6.0\n- Package name: HarvestBinCommands\n- Platform: macOS 12.0+\n- Targets: HarvestBinCommandsCore (library), HarvestBinCommandsDefaults (library), HarvestBinCommands (library), HarvestBinCommandsDemo (executable)\n- Test targets: HarvestBinCommandsCoreTests, HarvestBinCommandsDefaultsTests, HarvestBinCommandsTests\n- Dependencies: swift-subprocess from https://github.com/apple/swift-subprocess.git\n- Target dependencies: Core has swift-subprocess, Defaults depends on Core, Commands depends on Core and Defaults, Demo depends on Commands",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -28,7 +28,7 @@
               "1.1"
             ],
             "details": "In Package.swift:\n- Add package dependency: .package(url: \"https://github.com/apple/swift-subprocess.git\", from: \"1.0.0\")\n- Add to HarvestBinCommandsCore target dependencies: .product(name: \"Subprocess\", package: \"swift-subprocess\")\n- Verify the dependency resolves correctly with swift package resolve\n- Document the minimum required version of swift-subprocess",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -39,7 +39,7 @@
               "1.1"
             ],
             "details": "Create directories:\n- Sources/HarvestBinCommandsCore/\n- Sources/HarvestBinCommandsDefaults/\n- Sources/HarvestBinCommands/\n- Sources/HarvestBinCommandsDemo/\n- Tests/HarvestBinCommandsCoreTests/\n- Tests/HarvestBinCommandsDefaultsTests/\n- Tests/HarvestBinCommandsTests/\nAdd placeholder Swift files in each directory to ensure git tracks them",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -51,7 +51,7 @@
               "1.3"
             ],
             "details": "Create export files:\n- In HarvestBinCommandsCore: Create Core.swift with @_exported import Subprocess\n- In HarvestBinCommandsDefaults: Create Defaults.swift with import HarvestBinCommandsCore\n- In HarvestBinCommands: Create Commands.swift with imports for Core and Defaults\n- In HarvestBinCommandsDemo: Create main.swift with import HarvestBinCommands\nEnsure public access modifiers are properly set for cross-module visibility",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -63,7 +63,7 @@
               "1.4"
             ],
             "details": "Verification steps:\n1. Run 'swift build' to ensure all targets compile\n2. Run 'swift test' to verify test targets are configured\n3. Run 'swift build -c release' to test release configuration\n4. Run 'swift run HarvestBinCommandsDemo' to verify executable target\n5. Create basic XCTestCase files in each test target\n6. Add .gitignore for .build/, .swiftpm/, and Package.resolved\n7. Document build requirements in README",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -78,7 +78,7 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -86,7 +86,7 @@
             "description": "Create the base protocol for all commands with validation requirements and associated error types",
             "dependencies": [],
             "details": "Define CommandProtocol with command, arguments, requiresSudo, affectedProcess properties and validate() method. Create CommandError enum with cases for validationFailed, executionFailed, permissionDenied, timeout, and invalidOutput. Include Sendable conformance for actor compatibility.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -95,7 +95,7 @@
             "description": "Create the result type that encapsulates command execution output, errors, and exit codes",
             "dependencies": [],
             "details": "Create CommandResult struct with exitCode: Int32, standardOutput: String, standardError: String, executionTime: TimeInterval. Add convenience computed properties like isSuccess, hasOutput, combinedOutput. Make it Sendable for async contexts.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -107,7 +107,7 @@
               "2.2"
             ],
             "details": "Create CommandExecutor as a public actor with shared singleton. Implement basic execute() method using Subprocess library. Handle environment setup, working directory, and basic async execution flow. Include execution timeout handling with default 30 seconds.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -118,7 +118,7 @@
               "2.3"
             ],
             "details": "Extend CommandExecutor to detect requiresSudo commands and prepend sudo to execution. Implement sudo password caching detection and prompt handling. Add security validations to prevent command injection. Handle sudo timeout and authentication failures gracefully.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -129,7 +129,7 @@
               "2.2"
             ],
             "details": "Create OutputParser with methods for parsing JSON output, plist format, key-value pairs, and line-based output. Add trim/clean utilities for standardOutput and standardError. Include encoding detection and UTF-8 handling. Support streaming output for long-running commands.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -140,7 +140,7 @@
               "2.3"
             ],
             "details": "Extend CommandExecutor with killProcess() method using killall command. Implement safe process name validation. Add delay before killing to allow settings to save. Handle cases where process doesn't exist. Support both SIGTERM and SIGKILL signals.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -154,7 +154,7 @@
               "2.6"
             ],
             "details": "Implement error mapping from subprocess exit codes to CommandError cases. Add detailed error descriptions with recovery suggestions. Handle network errors, permission issues, missing commands, and malformed output. Include error context preservation and logging capabilities.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -171,7 +171,7 @@
               "2.7"
             ],
             "details": "Create MockSubprocess for testing command execution without system calls. Test all CommandProtocol validation scenarios. Verify CommandExecutor async behavior and timeout handling. Test sudo command construction and security. Mock process killing with various scenarios. Test error handling edge cases.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -984,7 +984,7 @@
     ],
     "metadata": {
       "created": "2025-07-29T16:00:15.190Z",
-      "updated": "2025-07-29T16:18:59.195Z",
+      "updated": "2025-07-29T18:14:53.530Z",
       "description": "Tasks for master context"
     }
   }

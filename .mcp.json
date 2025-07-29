@@ -2,10 +2,9 @@
 	"mcpServers": {
 		"task-master-ai": {
 			"type": "stdio",
-			"command": "npx",
+			"command": "npm",
 			"args": [
-				"-y",
-				"--package=task-master-ai",
+				"run",
 				"task-master-ai"
 			],
 			"env": {
