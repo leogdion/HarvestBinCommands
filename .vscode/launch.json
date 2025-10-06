@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:HarvestBinDemo}",
+            "name": "Debug HarvestBinCommandsDemo",
+            "program": "${workspaceFolder:HarvestBinDemo}/.build/debug/HarvestBinCommandsDemo",
+            "preLaunchTask": "swift: Build Debug HarvestBinCommandsDemo"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:HarvestBinDemo}",
+            "name": "Release HarvestBinCommandsDemo",
+            "program": "${workspaceFolder:HarvestBinDemo}/.build/release/HarvestBinCommandsDemo",
+            "preLaunchTask": "swift: Build Release HarvestBinCommandsDemo"
+        }
+    ]
+}
