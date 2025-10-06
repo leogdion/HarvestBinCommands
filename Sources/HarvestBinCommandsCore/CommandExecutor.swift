@@ -2,25 +2,45 @@ import Foundation
 
 public actor CommandExecutor {
     public static let shared = CommandExecutor()
-    
+
+    private var askpassHelperPath: String?
+
     private init() {}
     
     public func execute(_ command: CommandProtocol, timeout: TimeInterval = 30.0) async throws -> CommandResult {
         try command.validate()
         try PrivilegeEscalation.validateSudoCommand(command)
-        
+
         let startTime = CFAbsoluteTimeGetCurrent()
-        
-        let executable: String
-        let args: [String]
-        
+
+        // If sudo required, use Authorization Services for persistent auth
         if command.requiresSudo {
-            executable = "sudo"
-            args = [command.command] + command.arguments
-        } else {
-            executable = command.command
-            args = command.arguments
+            // Ensure we have authorization (prompts once if needed)
+            try await AuthorizationManager.shared.requestAuthorization()
+
+            // Execute with cached authorization
+            let result = try await AuthorizationManager.shared.executeAsRoot(
+                command: command.command,
+                arguments: command.arguments
+            )
+
+            let executionTime = CFAbsoluteTimeGetCurrent() - startTime
+
+            if let processToKill = command.affectedProcess {
+                try await ProcessKiller.killProcess(processToKill)
+            }
+
+            return CommandResult(
+                exitCode: result.exitCode,
+                standardOutput: result.output,
+                standardError: "",
+                executionTime: executionTime
+            )
         }
+
+        // Non-sudo commands use regular process execution
+        let executable = command.command
+        let args = command.arguments
         
         do {
             let result = try await executeProcess(executable: executable, arguments: args, timeout: timeout)
@@ -59,7 +79,7 @@ public actor CommandExecutor {
         let process = Process()
         let outputPipe = Pipe()
         let errorPipe = Pipe()
-        
+
         process.executableURL = URL(fileURLWithPath: executable)
         process.arguments = arguments
         process.standardOutput = outputPipe

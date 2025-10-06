@@ -8,16 +8,35 @@
 import SwiftUI
 import HarvestBinCommandsCore
 import HarvestBinCommandsDefaults
+import HarvestBinCommandsAdmin
+import Security
 
 struct ContentView: View {
     @State private var outputText: String = "Ready to test commands..."
     @State private var isLoading: Bool = false
+    @State private var showingLogViewer: Bool = false
+    @State private var logPath: String = ""
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("Defaults Command Tester")
-                .font(.largeTitle)
-                .padding()
+            HStack {
+                Text("HarvestBin Command Tester")
+                    .font(.largeTitle)
+
+                Spacer()
+
+                Button(action: {
+                    Task {
+                        logPath = await FileLogger.shared.getLogPath()
+                        showingLogViewer = true
+                    }
+                }) {
+                    Image(systemName: "doc.text.fill")
+                    Text("View Logs")
+                }
+                .buttonStyle(.bordered)
+            }
+            .padding(.horizontal)
 
             ScrollView {
                 Text(outputText)
@@ -82,6 +101,31 @@ struct ContentView: View {
                     }
                 }
 
+                Text("Remote Access Commands (requires sudo)")
+                    .font(.headline)
+                    .padding(.top)
+
+                VStack(spacing: 8) {
+                    HStack(spacing: 12) {
+                        Button("Check SSH Status") {
+                            Task { await checkSSHStatus() }
+                        }
+                        .buttonStyle(.borderedProminent)
+
+                        Button("Enable SSH") {
+                            Task { await enableSSH() }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.orange)
+
+                        Button("Disable SSH") {
+                            Task { await disableSSH() }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
+                    }
+                }
+
                 Button("Clear Output") {
                     outputText = "Ready to test commands..."
                 }
@@ -93,6 +137,19 @@ struct ContentView: View {
         }
         .frame(minWidth: 700, minHeight: 500)
         .padding()
+        .sheet(isPresented: $showingLogViewer) {
+            LogViewerView(logPath: logPath)
+        }
+        .task {
+            logPath = await FileLogger.shared.getLogPath()
+            await FileLogger.shared.log("ContentView appeared")
+
+            // Try to load persistent authorization
+            let hasAuth = await HelperToolManager.shared.loadPersistentAuthorization()
+            if hasAuth {
+                await FileLogger.shared.log("Loaded persistent authorization from previous session")
+            }
+        }
     }
 
     // MARK: - Type Tests
@@ -100,6 +157,7 @@ struct ContentView: View {
     func testBoolType() async {
         isLoading = true
         outputText = "Testing Bool type conversions...\n"
+        await FileLogger.shared.log("Starting Bool type test")
 
         do {
             // Test true values
@@ -214,9 +272,11 @@ struct ContentView: View {
 
         // Test with NSGlobalDomain which should have values
         let command = DefaultsReadCommand(domain: "NSGlobalDomain", key: "AppleLanguages")
+        await FileLogger.shared.logCommand(command.command, arguments: command.arguments, requiresSudo: command.requiresSudo)
 
         do {
             let result = try await CommandExecutor.shared.execute(command)
+            await FileLogger.shared.logResult(exitCode: result.exitCode, executionTime: result.executionTime, output: result.standardOutput, error: result.standardError)
             outputText += "✅ Command executed successfully:\n"
             outputText += "Domain: NSGlobalDomain\n"
             outputText += "Key: AppleLanguages\n"
@@ -250,9 +310,11 @@ struct ContentView: View {
         outputText = "Testing 'defaults domains' command...\n\n"
 
         let command = DefaultsDomainsCommand()
+        await FileLogger.shared.logCommand(command.command, arguments: command.arguments, requiresSudo: command.requiresSudo)
 
         do {
             let result = try await CommandExecutor.shared.execute(command)
+            await FileLogger.shared.logResult(exitCode: result.exitCode, executionTime: result.executionTime, output: result.standardOutput, error: result.standardError)
             outputText += "✅ Command executed successfully:\n"
             outputText += "Exit Code: \(result.exitCode)\n"
             outputText += "Execution Time: \(String(format: "%.3f", result.executionTime))s\n\n"
@@ -275,6 +337,7 @@ struct ContentView: View {
     func testWriteAndRead() async {
         isLoading = true
         outputText = "Testing write and read cycle...\n\n"
+        await FileLogger.shared.log("Starting write and read test")
 
         let testDomain = "com.harvestbin.test"
         let testKey = "TestKey"
@@ -284,7 +347,9 @@ struct ContentView: View {
             // Write a test value
             outputText += "Step 1: Writing test value...\n"
             let writeCmd = DefaultsWriteCommand(domain: testDomain, key: testKey, value: testValue)
+            await FileLogger.shared.logCommand(writeCmd.command, arguments: writeCmd.arguments, requiresSudo: writeCmd.requiresSudo)
             let writeResult = try await CommandExecutor.shared.execute(writeCmd)
+            await FileLogger.shared.logResult(exitCode: writeResult.exitCode, executionTime: writeResult.executionTime, output: writeResult.standardOutput, error: writeResult.standardError)
             outputText += "✅ Write successful (exit code: \(writeResult.exitCode))\n"
             outputText += "  Domain: \(testDomain)\n"
             outputText += "  Key: \(testKey)\n"
@@ -318,6 +383,158 @@ struct ContentView: View {
         }
 
         isLoading = false
+    }
+
+    // MARK: - Remote Access Commands
+
+    func checkSSHStatus() async {
+        isLoading = true
+        outputText = "Checking SSH service status...\n\n"
+        await FileLogger.shared.log("Checking SSH status")
+
+        do {
+            let isEnabled = try await RemoteAccessCommand.isServiceEnabled(.ssh)
+            await FileLogger.shared.log("SSH status: \(isEnabled ? "enabled" : "disabled")")
+            outputText += "SSH Service Status:\n"
+            outputText += isEnabled ? "✅ ENABLED\n" : "❌ DISABLED\n"
+            outputText += "\nService: SSH (Remote Login)\n"
+            outputText += "Launch Daemon: com.openssh.sshd\n"
+        } catch {
+            outputText += "❌ Error checking status: \(error.localizedDescription)\n"
+        }
+
+        isLoading = false
+    }
+
+    func enableSSH() async {
+        isLoading = true
+        outputText = "Enabling SSH service...\n\n"
+
+        let command = RemoteAccessCommand(service: .ssh, enabled: true)
+        await FileLogger.shared.logCommand(command.command, arguments: command.arguments, requiresSudo: command.requiresSudo)
+
+        do {
+            outputText += "⚠️ This operation requires administrator privileges.\n"
+
+            // First time will prompt, then caches for future app launches
+            try await HelperToolManager.shared.enablePersistentAuthorization()
+            outputText += "✅ Authorization cached for future sessions\n\n"
+
+            let result = try await CommandExecutor.shared.execute(command)
+            await FileLogger.shared.logResult(exitCode: result.exitCode, executionTime: result.executionTime, output: result.standardOutput, error: result.standardError)
+            outputText += "✅ SSH enabled successfully!\n"
+            outputText += "Exit Code: \(result.exitCode)\n"
+            outputText += "Execution Time: \(String(format: "%.3f", result.executionTime))s\n\n"
+
+            outputText += "SSH is now running on port 22.\n"
+            outputText += "You can connect with: ssh \(NSUserName())@localhost\n"
+
+        } catch {
+            await FileLogger.shared.logError(error)
+            outputText += "❌ Error: \(error.localizedDescription)\n\n"
+            outputText += "Note: This requires administrator privileges.\n"
+            outputText += "Make sure you have sudo access.\n"
+        }
+
+        isLoading = false
+    }
+
+    func disableSSH() async {
+        isLoading = true
+        outputText = "Disabling SSH service...\n\n"
+
+        let command = RemoteAccessCommand(service: .ssh, enabled: false)
+        await FileLogger.shared.logCommand(command.command, arguments: command.arguments, requiresSudo: command.requiresSudo)
+
+        do {
+            outputText += "⚠️ This operation requires sudo privileges.\n"
+            outputText += "You may be prompted for your password.\n\n"
+
+            let result = try await CommandExecutor.shared.execute(command)
+            await FileLogger.shared.logResult(exitCode: result.exitCode, executionTime: result.executionTime, output: result.standardOutput, error: result.standardError)
+            outputText += "✅ SSH disabled successfully!\n"
+            outputText += "Exit Code: \(result.exitCode)\n"
+            outputText += "Execution Time: \(String(format: "%.3f", result.executionTime))s\n\n"
+
+            outputText += "SSH is no longer accepting connections.\n"
+
+        } catch {
+            await FileLogger.shared.logError(error)
+            outputText += "❌ Error: \(error.localizedDescription)\n\n"
+            outputText += "Note: This requires administrator privileges.\n"
+            outputText += "Make sure you have sudo access.\n"
+        }
+
+        isLoading = false
+    }
+}
+
+// MARK: - Log Viewer
+
+struct LogViewerView: View {
+    let logPath: String
+    @State private var logContents: String = ""
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Command Log")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Spacer()
+
+                Button("Refresh") {
+                    Task { await refreshLog() }
+                }
+                .buttonStyle(.bordered)
+
+                Button("Clear Log") {
+                    Task {
+                        await FileLogger.shared.clearLog()
+                        await refreshLog()
+                    }
+                }
+                .buttonStyle(.bordered)
+
+                Button("Copy Path") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(logPath, forType: .string)
+                }
+                .buttonStyle(.bordered)
+
+                Button("Close") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .padding()
+
+            Text("Log file: \(logPath)")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+
+            Divider()
+
+            ScrollView {
+                Text(logContents)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .textSelection(.enabled)
+            }
+        }
+        .frame(minWidth: 800, minHeight: 600)
+        .task {
+            await refreshLog()
+        }
+    }
+
+    func refreshLog() async {
+        logContents = await FileLogger.shared.getLogContents()
     }
 }
 

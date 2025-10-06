@@ -7,6 +7,7 @@ let package = Package(
     products: [
         .library(name: "HarvestBinCommandsCore", targets: ["HarvestBinCommandsCore"]),
         .library(name: "HarvestBinCommandsDefaults", targets: ["HarvestBinCommandsDefaults"]),
+        .library(name: "HarvestBinCommandsAdmin", targets: ["HarvestBinCommandsAdmin"]),
         .library(name: "HarvestBinCommands", targets: ["HarvestBinCommands"]),
         .executable(name: "HarvestBinCommandsDemo", targets: ["HarvestBinCommandsDemo"])
     ],
@@ -23,8 +24,12 @@ let package = Package(
             dependencies: ["HarvestBinCommandsCore"]
         ),
         .target(
+            name: "HarvestBinCommandsAdmin",
+            dependencies: ["HarvestBinCommandsCore"]
+        ),
+        .target(
             name: "HarvestBinCommands",
-            dependencies: ["HarvestBinCommandsDefaults"]
+            dependencies: ["HarvestBinCommandsDefaults", "HarvestBinCommandsAdmin"]
         ),
         .executableTarget(
             name: "HarvestBinCommandsDemo",
@@ -37,6 +42,10 @@ let package = Package(
         .testTarget(
             name: "HarvestBinCommandsDefaultsTests",
             dependencies: ["HarvestBinCommandsDefaults"]
+        ),
+        .testTarget(
+            name: "HarvestBinCommandsAdminTests",
+            dependencies: ["HarvestBinCommandsAdmin"]
         ),
         .testTarget(
             name: "HarvestBinCommandsTests",
